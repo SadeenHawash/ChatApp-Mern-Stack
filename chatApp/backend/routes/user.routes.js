@@ -6,5 +6,5 @@ const router = express.Router();
 // use protectRoute to ensure that unauthunticated users 
 // wont be able to call this func
 
-router.get("/", protectRoute,getUsersForSidebar);
+router.get("/chats", protectRoute,getUsersForSidebar);
 export default router;

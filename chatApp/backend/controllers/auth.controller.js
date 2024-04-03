@@ -1,4 +1,5 @@
 import User from "../models/user.model.js";
+import BlacklistToken from "../models/blacklist.model.js";
 import bycryptjs from 'bcryptjs';
 import generateTokenAndSetCookies from "../utils/generateToken.js";
 
@@ -52,13 +53,22 @@ export const signupUser = async (req, res) =>{
 
 export const loginUser = async(req, res) =>{
     try {
-        const{userName, password} = req.body;
-        const user = await User.findOne({userName});
-        const isPasswordCorrect = await bycryptjs.compare(password, user?.password || "");
+        const { userName, password } = req.body;
+        const user = await User.findOne({ userName });
+        console.log('User:', user); // Log the user object
 
-        if(!user || !isPasswordCorrect){
-            res.status(400).json({error: "Invalid userName or password"});
+        if (!user) {
+            console.log('User not found');
+            return res.status(400).json({ error: "Invalid userName or password" });
         }
+
+        const isPasswordCorrect = await bycryptjs.compare(password, user.password);
+
+        if (!isPasswordCorrect) {
+            console.log('Incorrect password');
+            return res.status(400).json({ error: "Invalid userName or password" });
+        }
+
         generateTokenAndSetCookies(user._id, res);
 
         res.status(200).json({
@@ -66,16 +76,26 @@ export const loginUser = async(req, res) =>{
             fullName: user.fullName,
             userName: user.userName,
             profilePic: user.profilePic
-            });
+        });
     } catch (error) {
-        console.log("Error in Login controller", error.message);
-        res.status(500).json({error: "Internal Server Error"});
+        console.error("Error in Login controller", error); // Log the error
+        res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
-export const logoutUser = (req, res) =>{
+
+const revokeToken = async (token) => {
+    await BlacklistToken.create({ token });
+};
+
+export const logoutUser = async(req, res) =>{
     try {
-        res.cookie("jwt", "", {maxAge: 0});
+        // Revoke token
+        await revokeToken(req.cookies.jwt);
+
+        // Clear JWT cookie
+        res.clearCookie("jwt");
+        //res.cookie("jwt", "", {maxAge: 0});
         res.status(200).json({error: "Loggedout Successfully"});
     } catch (error) {
         console.log("Error in Logout controller", error.message);

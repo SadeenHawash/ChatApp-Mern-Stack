@@ -17,6 +17,7 @@ export const sendMessage = async(req, res) =>{
         if(!conversation){
             conversation = await Conversation.create({
                 participents: [senderId,receiverId],
+                messages: []
                 // array messages by default is empty, then no need to add it
             });
         }
@@ -54,7 +55,7 @@ export const getMessages = async(req, res) =>{
             participents: { $all: [senderId, userToChatId]},
         }).populate("messages");
 
-        if(!conversation) res.status(200).json([]);
+        if(!conversation) return res.status(200).json([]);
         
         const messages = conversation.messages;
         res.status(200).json(messages);

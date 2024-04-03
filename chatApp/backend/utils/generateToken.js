@@ -1,7 +1,11 @@
 import jwt from 'jsonwebtoken';
+//import crypto from 'crypto';
+
+// Generate a random secret key
+const secretKey = process.env.JWT_SECRET || 'ph3NNpZh8KVMReEGG6EQ3ekIawVIjSUT0zIUWAeiDrs=' //crypto.randomBytes(32).toString('hex');
 
 const generateTokenAndSetCookies = (userId, res) => {
-    const token = jwt.sign({userId}, process.env.JWT_SECRET,{
+    const token = jwt.sign({userId}, secretKey,{
         expiresIn: '15d'
     });
 
